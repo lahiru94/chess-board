@@ -59,6 +59,13 @@ async function piece2d(page: Page, square: string) {
   }, square);
 }
 
+/** Waits until the 3D view is shown and two frames have run: layout, resize observers, and camera fit have settled. */
+async function ready3d(page: Page) {
+  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await expect(page.locator('#board3d')).not.toHaveClass(/busy/);
+  await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+}
+
 test.beforeEach(async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
@@ -67,7 +74,7 @@ test.beforeEach(async ({ page }) => {
 
 test('3D code is not part of the first load, and the view switch works both ways', async ({ page }) => {
   await page.locator('#view-toggle').click();
-  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await ready3d(page);
   await expect(page.locator('#board')).toBeHidden();
   await expect(page.locator('#view-toggle')).toHaveText('2D');
 
@@ -79,7 +86,7 @@ test('3D code is not part of the first load, and the view switch works both ways
 
 test('drag a piece in 3D; the 2D board shows the same position', async ({ page }) => {
   await page.locator('#view-toggle').click();
-  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await ready3d(page);
   await drag(page, await project(page, 'e2', 0.6), await project(page, 'e4', 0));
   await expect(page.locator('#undo')).toBeEnabled();
   await page.locator('#view-toggle').click();
@@ -89,7 +96,7 @@ test('drag a piece in 3D; the 2D board shows the same position', async ({ page }
 
 test('a press on a tall piece picks that piece, not the square behind', async ({ page }) => {
   await page.locator('#view-toggle').click();
-  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await ready3d(page);
   // The top of the d1 queen is drawn over d2/d3 from this camera.
   await drag(page, await project(page, 'd1', 1.15), await project(page, 'd4', 0));
   await page.locator('#view-toggle').click();
@@ -100,7 +107,7 @@ test('a press on a tall piece picks that piece, not the square behind', async ({
 test('drawer drops land on the 3D board', async ({ page }) => {
   await page.locator('#view-toggle').click();
   await page.locator('#drawer-toggle').click();
-  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await ready3d(page);
   const knight = (await page.locator('.dw-pc[data-type="n"][data-color="b"]').boundingBox())!;
   await drag(page, { x: knight.x + knight.width / 2, y: knight.y + knight.height / 2 }, await project(page, 'd5', 0));
   await page.locator('#view-toggle').click();
@@ -110,7 +117,8 @@ test('drawer drops land on the 3D board', async ({ page }) => {
 test('rotate turns the camera to black, and moves still land correctly', async ({ page }) => {
   await page.locator('#view-toggle').click();
   await page.locator('#flip').click();
-  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await ready3d(page);
+  await expect(page.locator('#board3d')).toHaveAttribute('data-camera', 'black');
   await drag(page, await project(page, 'e7', 0.6, true), await project(page, 'e5', 0, true));
   await page.locator('#view-toggle').click();
   expect(await piece2d(page, 'e5')).toBe('bp');
@@ -118,7 +126,7 @@ test('rotate turns the camera to black, and moves still land correctly', async (
 
 test('keyboard works in 3D', async ({ page }) => {
   await page.locator('#view-toggle').click();
-  await expect(page.locator('#board3d canvas')).toBeVisible();
+  await ready3d(page);
   await page.locator('#board3d').focus();
   await page.keyboard.press('Enter'); // focus starts on e2
   await page.keyboard.press('ArrowUp');

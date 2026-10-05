@@ -5,7 +5,7 @@ import {
   HemisphereLight,
   Mesh,
   MeshStandardMaterial,
-  PCFSoftShadowMap,
+  PCFShadowMap,
   PerspectiveCamera,
   Scene,
   Spherical,
@@ -127,7 +127,7 @@ export class View3D implements BoardView {
     r.setPixelRatio(Math.min(devicePixelRatio, 2));
     r.setClearColor(0x000000, 0);
     r.shadowMap.enabled = true;
-    r.shadowMap.type = PCFSoftShadowMap;
+    r.shadowMap.type = PCFShadowMap;
     r.shadowMap.autoUpdate = false; // updated only when pieces move
     r.domElement.style.cssText = 'display:block;width:100%;height:100%;touch-action:none';
     el.append(r.domElement);
@@ -161,6 +161,7 @@ export class View3D implements BoardView {
     c.addEventListener('change', this.#onCameraChange);
     this.#resize();
     this.#setCamera(ctl.state.orientation === 'white' ? 0 : Math.PI);
+    el.dataset.camera = ctl.state.orientation;
     this.#orientation = ctl.state.orientation;
 
     const ro = new ResizeObserver(() => this.#resize());
@@ -360,8 +361,14 @@ export class View3D implements BoardView {
       this.#camera.lookAt(0, 0, 0);
       this.#controls.update();
     };
-    if (reducedMotion.matches) apply(1);
-    else this.#tween(this.#camera, 600, apply);
+    // data-camera names the side the camera has settled on (tests and styling can wait for it).
+    const side = theta === 0 ? 'white' : 'black';
+    delete this.#el.dataset.camera;
+    const done = () => (this.#el.dataset.camera = side);
+    if (reducedMotion.matches) {
+      apply(1);
+      done();
+    } else this.#tween(this.#camera, 600, apply, done);
   }
 
   #onCameraChange = (): void => {

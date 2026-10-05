@@ -24,8 +24,10 @@ view2d.mount(boardEl, board, ctl);
 const viewBtn = $<HTMLButtonElement>('#view-toggle');
 let refreshSkins: (is3d: boolean) => void = () => {};
 const views = new ViewSwitcher(board, ctl, boardEl, $('#board3d'), view2d, (is3d) => {
+  const label = is3d ? 'Switch to 2D view' : 'Switch to 3D view';
   viewBtn.textContent = is3d ? '2D' : '3D';
-  viewBtn.title = is3d ? 'Switch to 2D view' : 'Switch to 3D view';
+  viewBtn.title = label;
+  viewBtn.setAttribute('aria-label', label);
   viewBtn.setAttribute('aria-pressed', String(is3d));
   refreshSkins(is3d);
 });
