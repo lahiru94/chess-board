@@ -7,7 +7,9 @@ import { Board } from './src/core/index.ts';
 import { boardMarkup } from './src/view2d/markup.ts';
 
 // Inlined into index.html so the first paint needs no extra request (PLAN.md 6.1).
-const CSS_FILES = ['src/app/app.css', 'src/view2d/view2d.css', 'src/skins/2d/classic/skin.css'];
+const CSS_FILES = ['src/app/app.css', 'src/view2d/view2d.css'];
+// The default 2D skin, inlined in its own <style id="skin-2d"> so a skin switch can replace it.
+const SKIN_CSS_FILE = 'src/skins/2d/classic/skin.css';
 const SPRITE_FILE = 'src/skins/2d/classic/pieces.svg';
 
 function minifySvg(svg: string): string {
@@ -22,7 +24,7 @@ function minifySvg(svg: string): string {
  * Uses the same markup functions as the runtime, so the 2D view can adopt the DOM as is.
  */
 function prerender(): Plugin {
-  const files = [...CSS_FILES, SPRITE_FILE].map((f) => resolve(f));
+  const files = [...CSS_FILES, SKIN_CSS_FILE, SPRITE_FILE].map((f) => resolve(f));
   const read = (f: string) => readFileSync(resolve(f), 'utf8');
   return {
     name: 'chess-prerender',
@@ -32,6 +34,7 @@ function prerender(): Plugin {
       handler: (html) =>
         html
           .replace('<!--inline-css-->', CSS_FILES.map(read).join('\n'))
+          .replace('<!--skin-css-->', read(SKIN_CSS_FILE))
           .replace('<!--sprite-->', minifySvg(read(SPRITE_FILE)))
           .replace('<!--board-->', boardMarkup(new Board().onBoard(), 'white'))
           .replace('<!--drawer-->', drawerMarkup()),
@@ -51,7 +54,19 @@ export default defineConfig({
     target: 'es2022',
     // Every browser that runs this app supports modulepreload natively.
     modulePreload: { polyfill: false },
+    rollupOptions: {
+      output: {
+        // Named so the size check can budget skins and the 3D view separately.
+        chunkFileNames: (chunk) => {
+          const id = chunk.facadeModuleId ?? '';
+          if (id.includes('/skins/3d/')) return 'assets/skin3d-[name]-[hash].js';
+          if (id.includes('/skins/2d/')) return 'assets/skin2d-[name]-[hash].js';
+          return 'assets/[name]-[hash].js';
+        },
+      },
+    },
     reportCompressedSize: false,
+    sourcemap: true,
   },
   test: {
     include: ['tests/unit/**/*.test.ts'],

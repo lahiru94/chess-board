@@ -30,7 +30,7 @@
 .board .co {
   pointer-events: none;
   z-index: 3;
-  font: 600 calc(var(--bs, 400px) / 38) / 1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  font: 600 max(12px, calc(var(--bs, 400px) / 40)) / 1 system-ui, -apple-system, "Segoe UI", sans-serif;
   padding: 3%;
   box-sizing: border-box;
   display: flex;

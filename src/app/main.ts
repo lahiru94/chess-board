@@ -4,6 +4,8 @@ import { View2D } from '../view2d/view2d.ts';
 import type { BoardView } from '../view-contract.ts';
 import { mountDrawer } from './drawer.ts';
 import { pieceName } from './markup.ts';
+import { mountSkinPicker } from './skins.ts';
+import { prefetch3dOnIntent, ViewSwitcher } from './views.ts';
 
 function $<T extends HTMLElement>(sel: string): T {
   const el = document.querySelector<T>(sel);
@@ -14,8 +16,30 @@ function $<T extends HTMLElement>(sel: string): T {
 const board = new Board();
 const ctl = new Controller(board);
 const boardEl = $('#board');
-const view: BoardView = new View2D();
-view.mount(boardEl, board, ctl);
+const view2d: BoardView = new View2D();
+view2d.mount(boardEl, board, ctl);
+
+// ---- 2D / 3D and skins ----
+
+const viewBtn = $<HTMLButtonElement>('#view-toggle');
+let refreshSkins: (is3d: boolean) => void = () => {};
+const views = new ViewSwitcher(board, ctl, boardEl, $('#board3d'), view2d, (is3d) => {
+  viewBtn.textContent = is3d ? '2D' : '3D';
+  viewBtn.title = is3d ? 'Switch to 2D view' : 'Switch to 3D view';
+  viewBtn.setAttribute('aria-pressed', String(is3d));
+  refreshSkins(is3d);
+});
+refreshSkins = mountSkinPicker($<HTMLSelectElement>('#skin-picker'), views);
+
+viewBtn.addEventListener('click', async () => {
+  if (views.is3d) return views.show2d();
+  viewBtn.disabled = true;
+  try {
+    await views.show3d();
+  } finally {
+    viewBtn.disabled = false;
+  }
+});
 
 // ---- Toolbar ----
 
@@ -39,7 +63,7 @@ board.subscribe((e) => {
   redoBtn.disabled = !e.canRedo;
 });
 
-mountDrawer(drawerEl, ctl, () => view, boardEl);
+mountDrawer(drawerEl, ctl, () => views.active, boardEl);
 
 // ---- Shortcuts ----
 
@@ -71,3 +95,14 @@ function describe(d: BoardDiff): string {
 }
 
 boardEl.closest('.app')?.setAttribute('data-ready', 'true');
+
+// ---- After first paint ----
+
+prefetch3dOnIntent(viewBtn);
+
+addEventListener('load', () => {
+  // Offline support and instant repeat visits (PLAN.md 6.1). Not in dev: it would cache dev files.
+  if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  }
+});

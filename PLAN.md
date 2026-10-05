@@ -1,6 +1,6 @@
 # Chess Board Web App — Plan
 
-Status: M1, M2, M3 done. Next: M4 (3D view). Date: 2026-10-05.
+Status: M1–M5 done. Next: M6 (polish, accessibility checks, cross-browser tests). Date: 2026-10-05.
 
 This plan uses simplified technical English (close to ASD-STE100).
 Sentences are short. One instruction is in each sentence.
@@ -195,7 +195,7 @@ A view has one hard job: convert a pointer position to a square, or to a piece.
 In 2D this is simple math.
 In 3D this has two parts (see 6.3):
 
-- **Pick up:** test the ray against 32-ish simple hit cylinders, one for each piece. Tall pieces are hit at their head, not at the square behind them.
+- **Pick up:** test the ray against simple hit shapes, one for each piece: a wide base cylinder plus a narrower upper cylinder that follows the model. Tall pieces are hit at their head, not at the square behind them. A tall piece does not cover the piece behind it.
 - **Hover and drop:** intersect the ray with the flat board plane.
 
 ### 5.4 View contract
@@ -244,9 +244,9 @@ To add a skin: add one folder and one entry in the skin registry. No other code 
 2. Write the start position into `index.html` at build time. The board is visible before JavaScript runs.
 3. Ship the app JavaScript (core + interaction + 2D + shell) as **one** hashed module file. Use `<link rel="modulepreload">` so the browser fetches it at once. The browser caches it for repeat visits.
 4. Use no web fonts. Use system fonts.
-5. Load three.js and the 3D view with `import()` only. Prefetch the chunk during idle time if the network is fast (`navigator.connection` check, `requestIdleCallback`).
+5. Load three.js and the 3D view with `import()` only. Prefetch the chunk on user intent: the first interaction with the page, or pointer/focus on the 3D button. Skip it on Save-Data or 2G.
 6. Use hashed file names for all assets.
-7. Add a small hand-written service worker for offline use. It is optional. If it causes update problems, remove it. Normal browser caching already makes repeat visits fast.
+7. Add a small hand-written service worker (`public/sw.js`) for offline use. Pages are network-first, so a new deploy shows at once. Hashed assets are cache-first. If it causes update problems, remove it. Normal browser caching already makes repeat visits fast.
 
 **Pre-render and 2D view use the same markup function.**
 A small Vite plugin (in `vite.config.ts`) and the 2D view both call `boardMarkup()` from `src/view2d/markup.ts`.
@@ -287,7 +287,7 @@ Budgets (compressed, checked by `npm run check`):
 
 ### 6.5 Hosting (later)
 
-Deployment is not in scope now. We test locally with `npm run dev` and `npm run preview`.
+Deployment is not in scope now. We test locally with `npm run dev` and `npm run preview`. `npm run lighthouse` audits the running preview.
 The target is Vercel as a static site. The build output already fits this (hashed `/assets/*` files).
 When we deploy, we add `vercel.json` with cache headers.
 
@@ -302,14 +302,16 @@ chess-board/
 │  ├─ core/            board.ts, diff.ts, setup.ts, square.ts, types.ts, index.ts, tsconfig.json
 │  ├─ interaction/     controller.ts, types.ts, index.ts, tsconfig.json
 │  ├─ view2d/          view2d.ts, markup.ts, view2d.css
-│  ├─ view3d/          view3d.ts, geometry.ts, picking.ts, gestures.ts
+│  ├─ view3d/          view3d.ts, geometry.ts, picking.ts, camera-fit.ts
+│  ├─ view-keys.ts     keyboard handling shared by both views
 │  ├─ skins/
 │  │  ├─ registry.ts
 │  │  ├─ 2d/classic/   skin.css, pieces.svg
-│  │  └─ 3d/wood/      skin.ts
-│  ├─ app/             main.ts, drawer.ts, markup.ts, app.css
+│  │  ├─ 2d/types.ts
+│  │  └─ 3d/           types.ts, wood/skin.ts
+│  ├─ app/             main.ts, views.ts, skins.ts, drawer.ts, markup.ts, app.css
 │  ├─ view-contract.ts BoardView interface
-│  └─ sw.ts            service worker (optional)
+├─ public/sw.js       service worker
 ├─ vite.config.ts     includes the pre-render plugin
 ├─ scripts/
 │  └─ check-size.mjs   fails if a budget is exceeded
@@ -330,7 +332,7 @@ chess-board/
 | M2 | Core: state, move/add/remove/reset, capture rule, diff events, undo/redo history. Full unit tests. | 100% branch coverage on `core/`. |
 | M3 | Interaction layer + 2D view + Classic skin + shared markup function + pre-render. Drag, click-click, keyboard, rotate, reset, small undo/redo controls, drawer. | User can move, add, and remove pieces. Initial bundle ≤ 25 KB. |
 | M4 | 3D view (lazy) + Wood skin. Generated pieces, hit cylinders, gestures (2.5), rotate, drawer drops via `squareAt`. Measure the 3D chunk size first. | 60 fps drag on a mid-range phone. 3D chunk ≤ 200 KB. |
-| M5 | View switch, context-loss recovery, skin registry, idle prefetch, service worker. | Local Lighthouse performance score ≥ 98 on mobile. |
+| M5 | View switch polish (a basic 2D/3D button came early, in M4), context-loss recovery, skin registry, idle prefetch, service worker. | Local Lighthouse performance score ≥ 98 on mobile. |
 | M6 | Polish: move, capture, and remove animations; accessibility checks; cross-browser tests. | Playwright passes on Chromium, Firefox, WebKit. |
 
 ---
@@ -353,5 +355,12 @@ chess-board/
 | 2026-10-05 | Review: WebGL context loss? | Listen for it. Rebuild on next switch. |
 | 2026-10-05 | M3: click on another piece while one is selected? | Same color: change the selection. Other color: capture. Drag can capture any piece. |
 | 2026-10-05 | M3: import style? | Explicit `.ts` extensions, so Vite and Node can load the config natively. |
+| 2026-10-05 | M4: 3D chunk size? | Measured: 119 KB Brotli (145 KB gzip), budget 200 KB. |
+| 2026-10-05 | M4: how to try 3D before M5? | A basic 2D/3D button now. It lazy-loads the 3D view and keeps both views mounted. |
+| 2026-10-05 | M4: hit shape? | Base cylinder + narrower upper cylinder for each type. One wide cylinder made a king cover the pawn in front of it. |
+| 2026-10-05 | M5: 3D corners cut off? | Start distance is computed so the frame corners and tall corner pieces fit at every orbit angle. The user can still zoom in closer. |
+| 2026-10-05 | M5: when to prefetch 3D? | On intent, not on idle. Idle prefetch cost 10 Lighthouse points (unused JS, speed index). |
+| 2026-10-05 | M5: skin picker with one skin each? | Hidden. It appears when a view has two or more skins in `src/skins/registry.ts`. |
+| 2026-10-05 | M5: Lighthouse (mobile, local preview)? | Performance 100, accessibility 100, best practices 100. FCP/LCP 0.8 s, TBT 0 ms, CLS 0. |
 
 No questions are open.

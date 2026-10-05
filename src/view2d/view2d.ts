@@ -1,6 +1,7 @@
 import type { Board, BoardDiff, PieceId, Square } from '../core/index.ts';
 import type { Controller, InteractionState, Orientation } from '../interaction/index.ts';
 import type { BoardView } from '../view-contract.ts';
+import { handleBoardKey } from '../view-keys.ts';
 import { boardMarkup, cellTransform, coordsMarkup, pieceMarkup, type HighlightName } from './markup.ts';
 
 const DRAG_THRESHOLD = 4; // px before a press becomes a drag
@@ -58,7 +59,7 @@ export class View2D implements BoardView {
     this.#on(el, 'pointermove', this.#onMove);
     this.#on(el, 'pointerup', this.#onUp);
     this.#on(el, 'pointercancel', this.#onCancel);
-    this.#on(el, 'keydown', this.#onKey);
+    this.#on(el, 'keydown', (e) => handleBoardKey(e, ctl));
     // Show the focus square only for keyboard focus, not when a press focuses the board.
     this.#on(el, 'focus', () => !this.#pointerFocus && ctl.moveFocus(0, 0));
     this.#on(el, 'blur', () => ctl.blurFocus());
@@ -239,25 +240,6 @@ export class View2D implements BoardView {
     const el = this.#pieces.get(id);
     if (el && sq != null) el.style.transform = cellTransform(sq, this.#orientation);
   }
-
-  // ---- Keyboard ----
-
-  #onKey = (e: KeyboardEvent): void => {
-    const ctl = this.#ctl;
-    const dirs: Record<string, [number, number]> = {
-      ArrowLeft: [-1, 0],
-      ArrowRight: [1, 0],
-      ArrowUp: [0, 1],
-      ArrowDown: [0, -1],
-    };
-    const d = dirs[e.key];
-    if (d) ctl.moveFocus(d[0], d[1]);
-    else if (e.key === 'Enter' || e.key === ' ') ctl.activateFocus();
-    else if (e.key === 'Escape') ctl.cancel();
-    else if (e.key === 'Delete' || e.key === 'Backspace') ctl.removeSelected();
-    else return;
-    e.preventDefault();
-  };
 
   #on<K extends keyof HTMLElementEventMap>(el: HTMLElement, type: K, fn: (e: HTMLElementEventMap[K]) => void): void {
     el.addEventListener(type, fn);

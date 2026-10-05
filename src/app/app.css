@@ -46,6 +46,17 @@ body {
   }
 }
 .board { grid-area: board; width: var(--bs); }
+.board3d {
+  grid-area: board;
+  width: var(--bs);
+  height: var(--bs);
+  outline: none;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  cursor: grab;
+}
+.board3d.busy { cursor: progress; }
 
 .bar {
   grid-area: bar;
@@ -67,6 +78,17 @@ body {
   color: var(--app-fg);
   cursor: pointer;
 }
+.bar button.label { width: auto; padding: 0 8px; font: 600 13px/1 system-ui, -apple-system, "Segoe UI", sans-serif; letter-spacing: .02em; }
+#skin-picker {
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  padding: 0 6px;
+  background: var(--btn-hover);
+  color: var(--app-fg);
+  font: 13px system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+#sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
 .bar button svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .bar button:hover:not(:disabled) { background: var(--btn-hover); }
 .bar button:focus-visible, .dw-pc:focus-visible { outline: 2px solid var(--pressed); outline-offset: 1px; }
