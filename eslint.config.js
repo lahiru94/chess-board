@@ -15,6 +15,10 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
+    files: ['tests/**/*.ts'],
+    rules: { '@typescript-eslint/no-non-null-assertion': 'off' },
+  },
+  {
     // Core is the bottom layer (PLAN.md 5.2): it imports only its own files.
     files: ['src/core/**/*.ts'],
     languageOptions: { globals: {} },

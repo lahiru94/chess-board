@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "typecheck": "tsc -p tsconfig.json && tsc -p src/core/tsconfig.json",
     "lint": "eslint .",
-    "test": "vitest run",
+    "test": "vitest run --coverage",
     "test:watch": "vitest",
     "e2e": "playwright test",
     "size": "node scripts/check-size.mjs",

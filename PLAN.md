@@ -1,6 +1,6 @@
 # Chess Board Web App — Plan
 
-Status: M1 done. Next: M2 (core). Date: 2026-10-05.
+Status: M1, M2 done. Next: M3 (2D view). Date: 2026-10-05.
 
 This plan uses simplified technical English (close to ASD-STE100).
 Sentences are short. One instruction is in each sentence.
@@ -297,7 +297,7 @@ When we deploy, we add `vercel.json` with cache headers.
 chess-board/
 ├─ index.html
 ├─ src/
-│  ├─ core/            board.ts, commands.ts, history.ts, setup.ts, events.ts, types.ts, tsconfig.json
+│  ├─ core/            board.ts, diff.ts, setup.ts, square.ts, types.ts, index.ts, tsconfig.json
 │  ├─ interaction/     controller.ts, keyboard.ts
 │  ├─ view2d/          view2d.ts, markup.ts, view2d.css
 │  ├─ view3d/          view3d.ts, geometry.ts, picking.ts, gestures.ts

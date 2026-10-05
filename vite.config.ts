@@ -14,6 +14,9 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['src/core/**/*.ts'],
+      // PLAN.md M2: the core is fully covered, and stays that way.
+      thresholds: { 100: true },
+      reporter: ['text-summary'],
     },
   },
 });
