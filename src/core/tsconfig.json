@@ -1,0 +1,10 @@
+{
+  // The core must not touch the DOM or any renderer (PLAN.md 5.2).
+  // No "DOM" lib and no ambient types: using document/window fails here.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["./**/*.ts"]
+}

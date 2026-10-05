@@ -1,0 +1,320 @@
+<title>Chess Board Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,500;7..72,650&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one reading column; each section = short text + one diagram in a scrollable figure. Palette from tournament boards (green/stone squares, amber move highlight). */
+:root {
+  --bg: #f6f7f4;
+  --surface: #ffffff;
+  --fg: #1d2620;
+  --muted: #5d6a61;
+  --line: #cfd6cf;
+  --sq-dark: #6f8f72;
+  --sq-light: #e4e9dc;
+  --accent: #2f6b45;
+  --hl: #c98a1b;
+  --hl-soft: #f4e3c2;
+  --core: #dce8f3;
+  --core-ink: #24496b;
+  --font-display: "Literata", Georgia, "Times New Roman", serif;
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #141a16; --surface: #1b231e; --fg: #e3e9e2; --muted: #9aa89e; --line: #34413a;
+    --sq-dark: #4f6e55; --sq-light: #2c3a31; --accent: #7cc497; --hl: #e3a83c; --hl-soft: #3d311b;
+    --core: #1e3142; --core-ink: #a9cbe9; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #141a16; --surface: #1b231e; --fg: #e3e9e2; --muted: #9aa89e; --line: #34413a;
+  --sq-dark: #4f6e55; --sq-light: #2c3a31; --accent: #7cc497; --hl: #e3a83c; --hl-soft: #3d311b;
+  --core: #1e3142; --core-ink: #a9cbe9; color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-body);
+  font-size: 16px; line-height: 1.6; padding-inline: 16px; padding-block: 40px 64px;
+}
+main { max-width: 820px; margin: 0 auto; display: grid; gap: 56px; }
+header { display: grid; gap: 10px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+h1, h2 { font-family: var(--font-display); font-weight: 650; text-wrap: balance; margin: 0; line-height: 1.2; }
+h1 { font-size: clamp(30px, 5vw, 42px); }
+h2 { font-size: 24px; }
+p { margin: 0; max-width: 65ch; }
+section { display: grid; gap: 16px; }
+.lede { font-size: 18px; color: var(--muted); }
+code { font-family: var(--font-mono); font-size: .88em; background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 1px 5px; }
+figure { margin: 0; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 20px; overflow-x: auto; }
+figure svg { display: block; width: 100%; min-width: 620px; height: auto; }
+figcaption { font-size: 13px; color: var(--muted); margin-top: 12px; max-width: 65ch; }
+ul.rules { margin: 0; padding-left: 20px; display: grid; gap: 6px; max-width: 65ch; }
+table { border-collapse: collapse; width: 100%; font-size: 14px; }
+.table-wrap { overflow-x: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); font-weight: 600; }
+tr:last-child td { border-bottom: 0; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: -1px; margin-right: 6px; border: 1px solid var(--line); }
+
+/* SVG styling via tokens */
+.box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; }
+.box-core { fill: var(--core); stroke: var(--core-ink); stroke-width: 1.5; }
+.box-hl { fill: var(--hl-soft); stroke: var(--hl); stroke-width: 1.5; }
+.box-dash { fill: none; stroke: var(--muted); stroke-width: 1.2; stroke-dasharray: 5 4; }
+.t { fill: var(--fg); font-family: var(--font-body); font-size: 14px; }
+.t-b { fill: var(--fg); font-family: var(--font-body); font-size: 15px; font-weight: 650; }
+.t-m { fill: var(--muted); font-family: var(--font-mono); font-size: 11.5px; }
+.t-core { fill: var(--core-ink); font-family: var(--font-body); font-size: 15px; font-weight: 650; }
+.t-hl { fill: var(--hl); font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; }
+.arrow { stroke: var(--fg); stroke-width: 1.5; fill: none; }
+.arrow-hl { stroke: var(--hl); stroke-width: 1.8; fill: none; }
+.arrow-no { stroke: #c0392b; stroke-width: 1.5; fill: none; stroke-dasharray: 4 4; }
+.lane { stroke: var(--line); stroke-width: 1.2; stroke-dasharray: 3 4; }
+.sq-d { fill: var(--sq-dark); }
+.sq-l { fill: var(--sq-light); }
+.bar { fill: var(--accent); }
+.bar-soft { fill: var(--sq-light); stroke: var(--sq-dark); stroke-width: 1; }
+.bar-hl { fill: var(--hl); }
+.tick { stroke: var(--line); stroke-width: 1; }
+.head { fill: var(--fg); }
+.head-hl { fill: var(--hl); }
+.no { fill: #c0392b; font-family: var(--font-mono); font-size: 11.5px; font-weight: 600; }
+</style>
+
+<main>
+  <header>
+    <span class="eyebrow">Companion to PLAN.md · 2026-10-05</span>
+    <h1>Chess Board Architecture</h1>
+    <p class="lede">These diagrams show the complex parts of the plan. Each section has a short explanation and one diagram.</p>
+  </header>
+
+  <section>
+    <h2>1. The layers and the dependency rule</h2>
+    <p>The app has four layers. A layer can use the layer below it. A layer cannot use a layer above it. The core is at the bottom. It has no DOM and no WebGL. The compiler stops a violation.</p>
+    <figure>
+      <svg viewBox="0 0 680 330" role="img" aria-label="Four stacked layers: app, views, interaction, core">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+        </defs>
+        <rect x="20" y="16" width="470" height="52" rx="8" class="box"/>
+        <text x="40" y="40" class="t-b">app/</text>
+        <text x="40" y="58" class="t-m">shell · toolbar · drawer · view switch · skins</text>
+
+        <rect x="20" y="96" width="225" height="62" rx="8" class="box"/>
+        <text x="40" y="122" class="t-b">view2d/</text>
+        <text x="40" y="142" class="t-m">DOM + SVG + CSS transforms</text>
+        <rect x="265" y="96" width="225" height="62" rx="8" class="box-dash"/>
+        <text x="285" y="122" class="t-b">view3d/</text>
+        <text x="285" y="142" class="t-m">three.js · lazy chunk</text>
+
+        <rect x="20" y="186" width="470" height="52" rx="8" class="box"/>
+        <text x="40" y="210" class="t-b">interaction/</text>
+        <text x="40" y="228" class="t-m">selection · drag · orientation → commands</text>
+
+        <rect x="20" y="266" width="470" height="52" rx="8" class="box-core"/>
+        <text x="40" y="290" class="t-core">core/</text>
+        <text x="40" y="308" class="t-m">squares[64] · pieces · captured · events</text>
+
+        <line x1="255" y1="68" x2="255" y2="92" class="arrow" marker-end="url(#ah)"/>
+        <line x1="132" y1="158" x2="132" y2="182" class="arrow" marker-end="url(#ah)"/>
+        <line x1="378" y1="158" x2="378" y2="182" class="arrow" marker-end="url(#ah)"/>
+        <line x1="255" y1="238" x2="255" y2="262" class="arrow" marker-end="url(#ah)"/>
+
+        <path d="M490,292 C560,292 560,130 494,130" class="arrow-hl" marker-end="url(#ah)"/>
+        <text x="540" y="200" class="t-hl">change events</text>
+        <text x="540" y="216" class="t-hl">(diff only)</text>
+
+        <line x1="560" y1="40" x2="620" y2="40" class="arrow"/>
+        <text x="560" y="60" class="t-m">"uses"</text>
+        <line x1="560" y1="80" x2="620" y2="80" class="arrow-hl"/>
+        <text x="560" y="100" class="t-m">"notifies"</text>
+      </svg>
+      <figcaption>Calls go down. Only events come back up. The 3D box is dashed because it is not in the first download.</figcaption>
+    </figure>
+    <ul class="rules">
+      <li><code>core/tsconfig.json</code> has no <code>"DOM"</code> lib. Use of <code>document</code> or <code>window</code> fails the build.</li>
+      <li>An ESLint import rule stops <code>core/</code> from importing any other folder.</li>
+      <li>Core tests run in Node. No browser is necessary.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>2. One move, from pointer to pixels</h2>
+    <p>This example moves a knight onto a square with a pawn. The view only converts pointer positions to square numbers. The interaction layer decides what the user wants. The core applies the one-piece-per-square rule and sends a diff.</p>
+    <figure>
+      <svg viewBox="0 0 680 400" role="img" aria-label="Sequence diagram of a drag and drop move">
+        <defs>
+          <marker id="ah2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head"/></marker>
+          <marker id="ah3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-hl"/></marker>
+        </defs>
+        <rect x="20" y="14" width="140" height="40" rx="6" class="box"/><text x="90" y="39" text-anchor="middle" class="t-b">User</text>
+        <rect x="190" y="14" width="140" height="40" rx="6" class="box"/><text x="260" y="39" text-anchor="middle" class="t-b">View (2D/3D)</text>
+        <rect x="360" y="14" width="140" height="40" rx="6" class="box"/><text x="430" y="39" text-anchor="middle" class="t-b">Interaction</text>
+        <rect x="530" y="14" width="140" height="40" rx="6" class="box-core"/><text x="600" y="39" text-anchor="middle" class="t-core">Core</text>
+        <line x1="90" y1="54" x2="90" y2="390" class="lane"/>
+        <line x1="260" y1="54" x2="260" y2="390" class="lane"/>
+        <line x1="430" y1="54" x2="430" y2="390" class="lane"/>
+        <line x1="600" y1="54" x2="600" y2="390" class="lane"/>
+
+        <line x1="90" y1="84" x2="256" y2="84" class="arrow" marker-end="url(#ah2)"/>
+        <text x="100" y="78" class="t-m">pointerdown (x,y)</text>
+        <line x1="260" y1="114" x2="426" y2="114" class="arrow" marker-end="url(#ah2)"/>
+        <text x="270" y="108" class="t-m">pickUp(g1)</text>
+
+        <line x1="90" y1="150" x2="256" y2="150" class="arrow" marker-end="url(#ah2)"/>
+        <text x="100" y="144" class="t-m">pointermove ×N</text>
+        <text x="270" y="168" class="t-m">rAF: 1 transform write</text>
+        <text x="270" y="183" class="t-m">per frame. Core is idle.</text>
+
+        <line x1="90" y1="214" x2="256" y2="214" class="arrow" marker-end="url(#ah2)"/>
+        <text x="100" y="208" class="t-m">pointerup (x,y)</text>
+        <line x1="260" y1="242" x2="426" y2="242" class="arrow" marker-end="url(#ah2)"/>
+        <text x="270" y="236" class="t-m">drop(f3)</text>
+        <line x1="430" y1="270" x2="596" y2="270" class="arrow" marker-end="url(#ah2)"/>
+        <text x="440" y="264" class="t-m">move(wN1, f3)</text>
+
+        <rect x="540" y="284" width="130" height="50" rx="6" class="box-core"/>
+        <text x="550" y="304" class="t-m">f3 has bP6 →</text>
+        <text x="550" y="322" class="t-m">remove from board</text>
+
+        <line x1="600" y1="352" x2="264" y2="352" class="arrow-hl" marker-end="url(#ah3)"/>
+        <text x="300" y="346" class="t-hl">diff {moved:[wN1→f3], captured:[bP6]}</text>
+        <text x="270" y="378" class="t-m">update 2 elements only</text>
+      </svg>
+      <figcaption>During the drag, the core does no work. The core runs once, on drop. The view then updates only the two pieces in the diff.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>3. Load order</h2>
+    <p>The user sees the board before any JavaScript runs. The build writes the start position into the HTML with the same function the 2D view uses, so the view adopts those elements without a flash. The app JavaScript is one cached file. The 3D code is not in the first download. The app gets it during idle time, or when the user asks for 3D.</p>
+    <figure>
+      <svg viewBox="0 0 680 270" role="img" aria-label="Load timeline: static board, interactive 2D, idle prefetch, service worker">
+        <line x1="170" y1="30" x2="170" y2="230" class="tick"/>
+        <line x1="290" y1="30" x2="290" y2="230" class="tick"/>
+        <line x1="410" y1="30" x2="410" y2="230" class="tick"/>
+        <line x1="530" y1="30" x2="530" y2="230" class="tick"/>
+        <line x1="650" y1="30" x2="650" y2="230" class="tick"/>
+        <text x="170" y="250" text-anchor="middle" class="t-m">0</text>
+        <text x="290" y="250" text-anchor="middle" class="t-m">first paint</text>
+        <text x="410" y="250" text-anchor="middle" class="t-m">interactive</text>
+        <text x="530" y="250" text-anchor="middle" class="t-m">idle</text>
+        <text x="650" y="250" text-anchor="middle" class="t-m">later</text>
+
+        <text x="16" y="58" class="t">HTML + inline CSS</text>
+        <rect x="170" y="44" width="120" height="20" rx="3" class="bar"/>
+        <text x="300" y="59" class="t-m">static board visible</text>
+
+        <text x="16" y="98" class="t">app JS (1 file)</text>
+        <rect x="250" y="84" width="160" height="20" rx="3" class="bar"/>
+        <text x="420" y="99" class="t-m">≤ 25 KB total, compressed</text>
+
+        <text x="16" y="138" class="t">Service worker</text>
+        <rect x="410" y="124" width="120" height="20" rx="3" class="bar-soft"/>
+        <text x="540" y="139" class="t-m">caches all files</text>
+
+        <text x="16" y="178" class="t">3D chunk prefetch</text>
+        <rect x="530" y="164" width="120" height="20" rx="3" class="bar-soft"/>
+        <text x="16" y="194" class="t-m">only on fast network</text>
+
+        <text x="16" y="218" class="t">User clicks "3D"</text>
+        <rect x="560" y="206" width="90" height="16" rx="3" class="bar-hl"/>
+        <text x="460" y="219" class="t-hl">instant if cached</text>
+      </svg>
+      <figcaption>The time axis shows order, not measured times. The targets are in PLAN.md section 3: interactive in under 1 s on a mid-range phone on 4G.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>4. 3D picking: pointer to piece, pointer to square</h2>
+    <p>In 3D, picking has two parts. To <strong>pick up</strong> a piece, the ray is tested against one simple, invisible cylinder for each piece. This matters at low camera angles: the head of a tall king can appear over the square behind it, and a plane test would select that square. To <strong>hover and drop</strong>, the ray is intersected with the flat board plane at height 0. This is one line of math per pointer event, shown below.</p>
+    <figure>
+      <svg viewBox="0 0 680 300" role="img" aria-label="Camera ray intersects board plane; square index computed from hit point">
+        <defs>
+          <marker id="ah4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="head-hl"/></marker>
+        </defs>
+        <g transform="translate(260,190)">
+          <g transform="matrix(1,0.32,-1,0.32,0,0)">
+            <g id="rows"></g>
+          </g>
+        </g>
+        <circle cx="70" cy="50" r="12" class="box"/>
+        <text x="40" y="30" class="t-m">camera</text>
+        <line x1="80" y1="58" x2="292" y2="206" class="arrow-hl" marker-end="url(#ah4)"/>
+        <circle cx="296" cy="209" r="5" class="head-hl"/>
+        <text x="200" y="110" class="t-hl">ray through pointer</text>
+
+        <text x="440" y="64" class="t-b">Math</text>
+        <text x="440" y="90" class="t-m">t = −origin.y / dir.y</text>
+        <text x="440" y="110" class="t-m">hit = origin + t · dir</text>
+        <text x="440" y="130" class="t-m">file = floor(hit.x + 4)</text>
+        <text x="440" y="150" class="t-m">rank = floor(hit.z + 4)</text>
+        <text x="440" y="170" class="t-m">square = rank · 8 + file</text>
+        <text x="440" y="200" class="t">Outside 0–7? No square.</text>
+        <text x="440" y="222" class="t">Orientation flips file</text>
+        <text x="440" y="240" class="t">and rank before lookup.</text>
+      </svg>
+      <figcaption>Each square is 1 unit wide. The board spans −4 to +4 on the x and z axes. The plane test cost is constant. The cylinder test runs only on pointer down, against about 32 simple shapes.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <h2>5. Render on demand</h2>
+    <p>Many 3D apps draw 60 frames each second, all the time. That uses battery when nothing changes. Our 3D view draws a frame only when something changes. When the board is still, the GPU is idle.</p>
+    <figure>
+      <svg viewBox="0 0 680 190" role="img" aria-label="Comparison of continuous rendering and on-demand rendering frames">
+        <text x="16" y="50" class="t">Continuous loop</text>
+        <g id="cont"></g>
+        <text x="16" y="120" class="t">On demand (ours)</text>
+        <g id="ondemand"></g>
+        <text x="190" y="170" class="t-hl">drag</text>
+        <text x="420" y="170" class="t-hl">orbit</text>
+        <text x="600" y="170" class="t-m">still</text>
+      </svg>
+      <figcaption>Each tick is one frame. Frames happen only during a drag, a camera orbit, a piece animation, or a skin change.</figcaption>
+    </figure>
+    <ul class="rules">
+      <li>One mesh for each piece, with shared geometry and materials: about 32 + 1 board = 33 draw calls. That is easy for a phone GPU, and add, remove, lift, and highlight stay simple.</li>
+      <li>Piece shapes are built in code from small profile arrays. No model files are downloaded.</li>
+      <li>The shadow map updates only when a piece moves.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>6. A skin is data</h2>
+    <p>A skin has no logic. It is a set of values that a view reads. To add a skin, add one folder and one registry entry. The app loads each skin as a separate small file, only when needed.</p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Part</th><th>2D skin "Classic"</th><th>3D skin "Wood &amp; Ivory"</th></tr></thead>
+        <tbody>
+          <tr><td>Board</td><td><span class="swatch" style="background:#769656"></span>CSS vars for dark / light squares</td><td>Material colors or a small texture</td></tr>
+          <tr><td>Pieces</td><td>One SVG sprite, 12 symbols</td><td>Material values: color, roughness, metalness</td></tr>
+          <tr><td>Highlights</td><td><span class="swatch" style="background:#f6f669"></span>CSS vars for selected / last move</td><td>Emissive color for the selected piece</td></tr>
+          <tr><td>Scene</td><td>Coordinate label font and color</td><td>Light setup, background color</td></tr>
+          <tr><td>Size budget</td><td>≤ 10 KB</td><td>≤ 30 KB</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+(function () {
+  const NS = "http://www.w3.org/2000/svg";
+  const mk = (tag, attrs, parent) => { const el = document.createElementNS(NS, tag); for (const k in attrs) el.setAttribute(k, attrs[k]); parent.appendChild(el); return el; };
+
+  // Isometric board for section 4: 8x8 squares, 20 units each, centered.
+  const rows = document.getElementById("rows");
+  for (let r = 0; r < 8; r++) for (let f = 0; f < 8; f++)
+    mk("rect", { x: (f - 4) * 20, y: (r - 4) * 20, width: 20, height: 20, class: (r + f) % 2 ? "sq-l" : "sq-d" }, rows);
+
+  // Frame ticks for section 5.
+  const cont = document.getElementById("cont"), od = document.getElementById("ondemand");
+  for (let x = 170; x <= 660; x += 8) mk("rect", { x, y: 36, width: 3, height: 20, class: "bar" }, cont);
+  const active = (x) => (x >= 170 && x <= 300) || (x >= 400 && x <= 500);
+  for (let x = 170; x <= 660; x += 8) if (active(x)) mk("rect", { x, y: 106, width: 3, height: 20, class: "bar-hl" }, od);
+  mk("line", { x1: 170, y1: 116, x2: 660, y2: 116, class: "tick" }, od);
+})();
+</script>
