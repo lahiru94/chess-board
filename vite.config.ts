@@ -67,6 +67,8 @@ export default defineConfig({
     },
     reportCompressedSize: false,
     sourcemap: true,
+    // three.js is one large lazy chunk by design; scripts/check-size.mjs enforces real (compressed) budgets.
+    chunkSizeWarningLimit: 700,
   },
   test: {
     include: ['tests/unit/**/*.test.ts'],

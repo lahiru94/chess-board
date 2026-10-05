@@ -47,11 +47,21 @@ test('3D view rebuilds itself when the browser drops the WebGL context', async (
   await expect(page.locator('#undo')).toBeEnabled();
 });
 
-test('works offline after the first visit (service worker)', async ({ page, context }) => {
+test('works offline after the first visit (service worker)', async ({ page, context, browserName }) => {
   await page.goto('/');
   await expect(page.locator('.app')).toHaveAttribute('data-ready', 'true');
   await page.waitForFunction(() => navigator.serviceWorker?.controller != null, null, { timeout: 10_000 });
 
+  // The worker cached the page and its script during install.
+  const cached = await page.evaluate(async () => {
+    const keys = await (await caches.open('chess-board-v1')).keys();
+    return keys.map((r) => new URL(r.url).pathname);
+  });
+  expect(cached).toContain('/');
+  expect(cached.some((p) => /^\/assets\/index-.*\.js$/.test(p))).toBe(true);
+
+  // Playwright's WebKit offline mode fails navigations before the service worker can answer.
+  test.skip(browserName === 'webkit', 'Offline reload is not emulated through service workers in WebKit');
   await context.setOffline(true);
   await page.reload();
   await expect(page.locator('#board .pc')).toHaveCount(32);

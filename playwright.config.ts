@@ -12,12 +12,13 @@ export default defineConfig({
     url: 'http://localhost:4173',
     reuseExistingServer: true,
   },
-  // Firefox and WebKit are added in M6.
   projects: [
     {
       name: 'chromium',
       // Software WebGL so the 3D tests run headless on any machine.
       use: { ...devices['Desktop Chrome'], launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] } },
     },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

@@ -2,7 +2,7 @@ import type { Skin3D } from '../types.ts';
 
 export const woodSkin: Skin3D = {
   name: 'Wood & Ivory',
-  board: { light: '#e3c79f', dark: '#9a6a3f', frame: '#5c3b22', frameRoughness: 0.6 },
+  board: { light: '#e3c79f', dark: '#9a6a3f', frame: '#5c3b22', frameRoughness: 0.6, labels: '#e9d3ad' },
   pieces: {
     w: { color: '#f2e8d5', roughness: 0.42, metalness: 0 },
     b: { color: '#2e2019', roughness: 0.34, metalness: 0 },

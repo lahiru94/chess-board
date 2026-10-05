@@ -1,6 +1,6 @@
 # Chess Board Web App — Plan
 
-Status: M1–M5 done. Next: M6 (polish, accessibility checks, cross-browser tests). Date: 2026-10-05.
+Status: M1–M6 done. All planned milestones are complete. Deployment (Vercel) is the next step when you are ready. Date: 2026-10-05.
 
 This plan uses simplified technical English (close to ASD-STE100).
 Sentences are short. One instruction is in each sentence.
@@ -302,7 +302,7 @@ chess-board/
 │  ├─ core/            board.ts, diff.ts, setup.ts, square.ts, types.ts, index.ts, tsconfig.json
 │  ├─ interaction/     controller.ts, types.ts, index.ts, tsconfig.json
 │  ├─ view2d/          view2d.ts, markup.ts, view2d.css
-│  ├─ view3d/          view3d.ts, geometry.ts, picking.ts, camera-fit.ts
+│  ├─ view3d/          view3d.ts, geometry.ts, picking.ts, camera-fit.ts, labels.ts
 │  ├─ view-keys.ts     keyboard handling shared by both views
 │  ├─ skins/
 │  │  ├─ registry.ts
@@ -317,7 +317,7 @@ chess-board/
 │  └─ check-size.mjs   fails if a budget is exceeded
 ├─ tests/
 │  ├─ unit/            Vitest unit tests (core, interaction)
-│  └─ e2e/             Playwright tests
+│  └─ e2e/             Playwright tests (Chromium, Firefox, WebKit), incl. axe accessibility checks
 ├─ docs/plan-explainer.html
 └─ PLAN.md
 ```
@@ -362,5 +362,9 @@ chess-board/
 | 2026-10-05 | M5: when to prefetch 3D? | On intent, not on idle. Idle prefetch cost 10 Lighthouse points (unused JS, speed index). |
 | 2026-10-05 | M5: skin picker with one skin each? | Hidden. It appears when a view has two or more skins in `src/skins/registry.ts`. |
 | 2026-10-05 | M5: Lighthouse (mobile, local preview)? | Performance 100, accessibility 100, best practices 100. FCP/LCP 0.8 s, TBT 0 ms, CLS 0. |
+| 2026-10-05 | M6: 3D knight model? | Keep as is (user decision). |
+| 2026-10-05 | M6: 3D coordinates? | Printed on the frame border, both sides, like a real board. Ring geometry only, so no overdraw on the squares. |
+| 2026-10-05 | M6: WebKit offline test? | Playwright's WebKit offline mode fails navigations before the service worker answers. In WebKit we check that the worker controls the page and cached the page and script; the offline reload runs in Chromium and Firefox. |
+| 2026-10-05 | M6: accessibility? | axe (WCAG 2.1 A/AA): no violations in 2D, drawer open, dark mode, and 3D. |
 
 No questions are open.

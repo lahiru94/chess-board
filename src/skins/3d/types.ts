@@ -7,7 +7,7 @@ export interface PieceMaterial {
 
 export interface Skin3D {
   name: string;
-  board: { light: string; dark: string; frame: string; frameRoughness: number };
+  board: { light: string; dark: string; frame: string; frameRoughness: number; labels: string };
   pieces: { w: PieceMaterial; b: PieceMaterial };
   /** Square tints, mixed over the square color by `amount`. */
   highlight: {

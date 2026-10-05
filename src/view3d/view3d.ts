@@ -22,6 +22,7 @@ import type { BoardView } from '../view-contract.ts';
 import { handleBoardKey } from '../view-keys.ts';
 import { fitDistance } from './camera-fit.ts';
 import { buildPieceGeometries, buildSquaresGeometry } from './geometry.ts';
+import { FrameLabels } from './labels.ts';
 import { intersectPlane, pickPiece, squareAtPoint, squareCenter, type Ray } from './picking.ts';
 
 const DRAG_THRESHOLD = 4;
@@ -69,6 +70,7 @@ export class View3D implements BoardView {
   #mats!: Record<PieceColor, MeshStandardMaterial>;
   #squares!: Mesh;
   #frame!: Mesh;
+  #labels!: FrameLabels;
   #meshes = new Map<PieceId, Mesh>();
   #orientation: Orientation = 'white';
   #fitted = 20; // camera distance that fits the board; set on resize
@@ -107,6 +109,7 @@ export class View3D implements BoardView {
     const frame = this.#frame.material as MeshStandardMaterial;
     frame.color.set(skin.board.frame);
     frame.roughness = skin.board.frameRoughness;
+    this.#labels.setColor(skin.board.labels);
     this.#sky.color.set(skin.light.sky);
     this.#sky.groundColor.set(skin.light.ground);
     this.#sky.intensity = skin.light.ambient;
@@ -196,6 +199,7 @@ export class View3D implements BoardView {
     for (const m of Object.values(this.#mats)) m.dispose();
     this.#squares.geometry.dispose();
     (this.#squares.material as MeshStandardMaterial).dispose();
+    this.#labels.dispose();
     this.#frame.geometry.dispose();
     (this.#frame.material as MeshStandardMaterial).dispose();
     this.#renderer.dispose();
@@ -239,7 +243,9 @@ export class View3D implements BoardView {
     sun.shadow.bias = -0.0005;
     sun.shadow.normalBias = 0.02;
 
-    this.#scene.add(this.#squares, this.#frame, sky, sun);
+    this.#labels = new FrameLabels(s.board.labels, this.#renderer.capabilities.getMaxAnisotropy());
+
+    this.#scene.add(this.#squares, this.#frame, this.#labels.mesh, sky, sun);
   }
 
   #addMesh(id: PieceId, type: PieceType, color: PieceColor, sq: Square): Mesh {
