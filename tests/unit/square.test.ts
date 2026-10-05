@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fileOf, isSquare, rankOf, squareName, toSquare } from '../../src/core/square';
+import { fileOf, isSquare, rankOf, squareName, toSquare } from '../../src/core/square.ts';
 
 describe('square helpers', () => {
   it('maps file and rank to an index and back', () => {

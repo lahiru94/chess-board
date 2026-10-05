@@ -1,4 +1,4 @@
-import type { Color, PieceType } from './types';
+import type { Color, PieceType } from './types.ts';
 
 const BACK_RANK: readonly PieceType[] = ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r'];
 

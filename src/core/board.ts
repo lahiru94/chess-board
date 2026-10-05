@@ -1,7 +1,7 @@
-import { diffSquares } from './diff';
-import { START_POSITION } from './setup';
-import { isSquare } from './square';
-import type { ChangeEvent, Color, Piece, PieceId, PieceType, Square } from './types';
+import { diffSquares } from './diff.ts';
+import { START_POSITION } from './setup.ts';
+import { isSquare } from './square.ts';
+import type { ChangeEvent, Color, Piece, PieceId, PieceType, Square } from './types.ts';
 
 type Cells = (PieceId | null)[];
 

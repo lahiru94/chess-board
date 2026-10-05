@@ -1,0 +1,9 @@
+{
+  // Interaction logic is DOM-free too, so it can be tested in Node and shared by 2D and 3D.
+  "extends": "../../tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["./**/*.ts"]
+}

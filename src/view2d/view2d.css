@@ -1,0 +1,43 @@
+/* Structure only. Colors come from the skin (skins/2d/*). */
+.board {
+  position: relative;
+  aspect-ratio: 1;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  outline: none;
+  contain: layout paint;
+  background: repeating-conic-gradient(var(--sq-dark) 0 25%, var(--sq-light) 0 50%) 0 0 / 25% 25%;
+}
+.board .pc, .board .hl, .board .co {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12.5%;
+  height: 12.5%;
+}
+.board .pc {
+  cursor: grab;
+  transition: transform 160ms ease-out;
+  z-index: 2;
+}
+.board .pc svg { display: block; width: 100%; height: 100%; pointer-events: none; }
+.board .pc.drag { transition: none; z-index: 10; cursor: grabbing; will-change: transform; }
+.board .pc.drag svg { transform: scale(1.15); filter: drop-shadow(0 6px 6px rgb(0 0 0 / .3)); }
+.board .pc.out { z-index: 1; pointer-events: none; }
+.board .hl { pointer-events: none; z-index: 1; }
+.board .co {
+  pointer-events: none;
+  z-index: 3;
+  font: 600 calc(var(--bs, 400px) / 38) / 1 system-ui, -apple-system, "Segoe UI", sans-serif;
+  padding: 3%;
+  box-sizing: border-box;
+  display: flex;
+}
+.board .co-f { align-items: flex-end; justify-content: flex-end; }
+.board .co-r { align-items: flex-start; justify-content: flex-start; }
+.board.placing, .board.placing .pc { cursor: copy; }
+@media (prefers-reduced-motion: reduce) {
+  .board .pc { transition: none; }
+}

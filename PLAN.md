@@ -1,6 +1,6 @@
 # Chess Board Web App — Plan
 
-Status: M1, M2 done. Next: M3 (2D view). Date: 2026-10-05.
+Status: M1, M2, M3 done. Next: M4 (3D view). Date: 2026-10-05.
 
 This plan uses simplified technical English (close to ASD-STE100).
 Sentences are short. One instruction is in each sentence.
@@ -179,6 +179,7 @@ The core does not save state. A page reload starts a new board (F11).
 - `src/core/` has its own `tsconfig.json` with `"lib": ["ES2022"]`, no `"DOM"`, and `"types": []`.
   If core code uses `document` or `window`, the build fails.
 - An ESLint rule (`no-restricted-imports`) stops `core/` from importing other layers.
+- `src/interaction/` is also DOM-free, with the same kind of `tsconfig.json`. Its tests run in Node too.
 - Core tests run in Node with no browser.
 
 ### 5.3 Interaction layer (`src/interaction/`)
@@ -203,15 +204,15 @@ Each view implements one interface:
 
 ```ts
 interface BoardView {
-  mount(el: HTMLElement, state: BoardState): void;
+  mount(el: HTMLElement, board: Board, controller: Controller): void;
   unmount(): void;
-  applyDiff(diff: BoardDiff): void;          // from core events
-  setOrientation(o: 'white' | 'black'): void;
-  setSkin(skin: Skin2D | Skin3D): void;
-  setHighlight(state: InteractionState): void;
   squareAt(clientX: number, clientY: number): Square | null;  // for drawer drops
 }
 ```
+
+The view subscribes to the board (diffs) and to the controller (selection, hover, focus, orientation) itself.
+So the contract stays small. `setSkin` arrives with the skin registry in M5.
+The contract is in `src/view-contract.ts`.
 
 The drawer is outside the view. When the user drags from the drawer, the app asks the active view for `squareAt(x, y)`.
 This is how one drawer works for 2D and 3D.
@@ -248,7 +249,8 @@ To add a skin: add one folder and one entry in the skin registry. No other code 
 7. Add a small hand-written service worker for offline use. It is optional. If it causes update problems, remove it. Normal browser caching already makes repeat visits fast.
 
 **Pre-render and 2D view use the same markup function.**
-The build step and the 2D view both call one function, `renderBoardMarkup(state)`.
+A small Vite plugin (in `vite.config.ts`) and the 2D view both call `boardMarkup()` from `src/view2d/markup.ts`.
+The plugin also inlines the CSS, the piece sprite, and the drawer markup.
 When the JavaScript starts, the 2D view adopts the existing elements. It does not rebuild them.
 So there is no flash and no mismatch.
 
@@ -298,20 +300,21 @@ chess-board/
 ├─ index.html
 ├─ src/
 │  ├─ core/            board.ts, diff.ts, setup.ts, square.ts, types.ts, index.ts, tsconfig.json
-│  ├─ interaction/     controller.ts, keyboard.ts
+│  ├─ interaction/     controller.ts, types.ts, index.ts, tsconfig.json
 │  ├─ view2d/          view2d.ts, markup.ts, view2d.css
 │  ├─ view3d/          view3d.ts, geometry.ts, picking.ts, gestures.ts
 │  ├─ skins/
 │  │  ├─ registry.ts
 │  │  ├─ 2d/classic/   skin.css, pieces.svg
 │  │  └─ 3d/wood/      skin.ts
-│  ├─ app/             main.ts, toolbar.ts, drawer.ts
+│  ├─ app/             main.ts, drawer.ts, markup.ts, app.css
+│  ├─ view-contract.ts BoardView interface
 │  └─ sw.ts            service worker (optional)
+├─ vite.config.ts     includes the pre-render plugin
 ├─ scripts/
-│  ├─ prerender.mjs    writes the start position into index.html
 │  └─ check-size.mjs   fails if a budget is exceeded
 ├─ tests/
-│  ├─ core/            Vitest unit tests
+│  ├─ unit/            Vitest unit tests (core, interaction)
 │  └─ e2e/             Playwright tests
 ├─ docs/plan-explainer.html
 └─ PLAN.md
@@ -348,5 +351,7 @@ chess-board/
 | 2026-10-05 | Review: 3D size budget? | 200 KB. Measure early in M4. |
 | 2026-10-05 | Review: pre-render mismatch? | One shared markup function. The 2D view adopts the elements. |
 | 2026-10-05 | Review: WebGL context loss? | Listen for it. Rebuild on next switch. |
+| 2026-10-05 | M3: click on another piece while one is selected? | Same color: change the selection. Other color: capture. Drag can capture any piece. |
+| 2026-10-05 | M3: import style? | Explicit `.ts` extensions, so Vite and Node can load the config natively. |
 
 No questions are open.

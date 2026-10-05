@@ -1,4 +1,4 @@
-import type { Square } from './types';
+import type { Square } from './types.ts';
 
 const FILES = 'abcdefgh';
 

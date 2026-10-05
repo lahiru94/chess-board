@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { Board, type ChangeEvent, type PieceId, type Square } from '../../src/core';
-import { diffSquares } from '../../src/core/diff';
+import { Board, type ChangeEvent, type PieceId, type Square } from '../../src/core/index.ts';
+import { diffSquares } from '../../src/core/diff.ts';
 
 const sq = (name: string): Square => (name.charCodeAt(1) - 49) * 8 + (name.charCodeAt(0) - 97);
 

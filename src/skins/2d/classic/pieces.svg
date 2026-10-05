@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="position:absolute;width:0;height:0" aria-hidden="true">
+<!-- Classic piece set, drawn for this project. One symbol per type; color comes from
+     --pc-fill / --pc-line / --pc-detail set on the piece element (see skin.css). -->
+<defs>
+<path id="pc-base" d="M10 39h25v-2.5c0-2-1.5-3.5-3.5-3.5h-18c-2 0-3.5 1.5-3.5 3.5z"/>
+</defs>
+<symbol id="pc-p" viewBox="0 0 45 45">
+<g style="fill:var(--pc-fill);stroke:var(--pc-line);stroke-width:1.5;stroke-linejoin:round">
+<path d="M16.5 33c0-5 3.5-8.5 3.5-13h5c0 4.5 3.5 8 3.5 13z"/>
+<rect x="17.5" y="18" width="10" height="3" rx="1.5"/>
+<circle cx="22.5" cy="13" r="5"/>
+<use href="#pc-base"/>
+</g>
+</symbol>
+<symbol id="pc-r" viewBox="0 0 45 45">
+<g style="fill:var(--pc-fill);stroke:var(--pc-line);stroke-width:1.5;stroke-linejoin:round">
+<path d="M14.5 17h16l1.5 16h-19z"/>
+<path d="M12 9h4v3h3.5V9h6v3H29V9h4v8H12z"/>
+<use href="#pc-base"/>
+</g>
+<path d="M15 29h15" style="fill:none;stroke:var(--pc-detail);stroke-width:1.2"/>
+</symbol>
+<symbol id="pc-n" viewBox="0 0 45 45">
+<g style="fill:var(--pc-fill);stroke:var(--pc-line);stroke-width:1.5;stroke-linejoin:round">
+<path d="M13 33c0-6 3-10 6-13-2 0-5 1-8 3-2-2-2-5 1-7l7-6V6l3 3c6 0 11 5 11 14l-1 10z"/>
+<use href="#pc-base"/>
+</g>
+<g style="fill:none;stroke:var(--pc-detail);stroke-width:1.2;stroke-linecap:round">
+<path d="M24.5 11.5c4 2 6 6 6 11"/>
+</g>
+<circle cx="17.5" cy="14.5" r="1.2" style="fill:var(--pc-detail)"/>
+</symbol>
+<symbol id="pc-b" viewBox="0 0 45 45">
+<g style="fill:var(--pc-fill);stroke:var(--pc-line);stroke-width:1.5;stroke-linejoin:round">
+<path d="M15 30h15l2 3H13z"/>
+<path d="M16 27h13v3H16z"/>
+<path d="M22.5 9c-5 4-8 8.5-8 12.5 0 3.5 3 5.5 8 5.5s8-2 8-5.5c0-4-3-8.5-8-12.5z"/>
+<circle cx="22.5" cy="6.5" r="2.5"/>
+<use href="#pc-base"/>
+</g>
+<path d="M25.5 14.5l-4.5 5" style="fill:none;stroke:var(--pc-detail);stroke-width:1.4;stroke-linecap:round"/>
+</symbol>
+<symbol id="pc-q" viewBox="0 0 45 45">
+<g style="fill:var(--pc-fill);stroke:var(--pc-line);stroke-width:1.5;stroke-linejoin:round">
+<path d="M12 33l-2-18 6 9 2.5-12 4 11 4-11 2.5 12 6-9-2 18z"/>
+<circle cx="10" cy="13.5" r="2"/>
+<circle cx="18.5" cy="10.5" r="2"/>
+<circle cx="26.5" cy="10.5" r="2"/>
+<circle cx="35" cy="13.5" r="2"/>
+<use href="#pc-base"/>
+</g>
+<path d="M12.8 29h19.4" style="fill:none;stroke:var(--pc-detail);stroke-width:1.2"/>
+</symbol>
+<symbol id="pc-k" viewBox="0 0 45 45">
+<g style="fill:var(--pc-fill);stroke:var(--pc-line);stroke-width:1.5;stroke-linejoin:round">
+<path d="M21 3.5h3v3h3v3h-3v4h-3v-4h-3v-3h3z"/>
+<path d="M13 33c-3-6-5-12 0-15 3-2 7-1 9.5 3 2.5-4 6.5-5 9.5-3 5 3 3 9 0 15z"/>
+<use href="#pc-base"/>
+</g>
+<path d="M14.5 29h16M22.5 21v8" style="fill:none;stroke:var(--pc-detail);stroke-width:1.2"/>
+</symbol>
+</svg>

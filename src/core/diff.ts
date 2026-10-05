@@ -1,4 +1,4 @@
-import type { BoardDiff, PieceId, Square } from './types';
+import type { BoardDiff, PieceId, Square } from './types.ts';
 
 type Cells = readonly (PieceId | null)[];
 

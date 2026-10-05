@@ -1,0 +1,9 @@
+{
+  // Build and test tooling runs in Node.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["vite.config.ts", "playwright.config.ts"]
+}
